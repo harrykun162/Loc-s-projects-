@@ -1,0 +1,594 @@
+---
+title: "Retail_project"
+author: "Ba Loc Nguyen"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE, warning=FALSE,message=FALSE}
+knitr::opts_chunk$set(echo = TRUE,warning=FALSE)
+```
+
+```{r}
+#Setup and read dataset
+library(fpp3)
+get_my_data <- function(student_id) {
+  set.seed(student_id)
+  all_data <- readr::read_rds("https://bit.ly/monashretaildata")
+  while(TRUE) {
+    retail <- filter(all_data, `Series ID` == sample(`Series ID`, 1))
+    if(!any(is.na(fill_gaps(retail)$Turnover))) return(retail)
+  }
+}
+# Replace the argument with your student ID
+retail <- get_my_data(33051046)
+```
+
+
+## Discussion of the statistical features
+```{r}
+retail%>%autoplot(Turnover)+
+  labs(y="$Million AUD",
+      title = "Total turnover in Clothing, footwear and personal accessory retailing industry
+       within Queensland")
+```
+
+
+Using "autoplot()" to generate the "turnover" plot over years, we could observe that the overall trend is upwards, indicating that total turnover in Clothing, footwear and personal accessory retailing was increasing over time. In terms of seasonality, there was a seasonal peak throughout each year (this will be explored using gg_season() later). Ultimately, we can see that there is a sharp drop in Turnover around the year 2020, and unsurprisingly, this was due to COVID that caused major financial crisis to every industry globally. 
+
+
+
+```{r}
+retail%>%gg_season()+
+  labs(y="$Million AUD",
+      title = "Seasonal plot: Total turnover in Clothing, footwear and personal accessory 
+      retailing industry within Queensland")
+```
+
+
+With gg_season(), we can now clearly observe that for every year, the amount of turnover reaches its peak in December while the minimum turnover for a particular year usually falls in February (this might be due to the fact that February has fewer days than other months). From the graph, the curves for most recent years will lie above those for older years, which demonstrates the increase in turnover over years. Remarkably, we could see that there is one pink curve that differs from the rest and this represents the turnover for 2020 with major decline due to COVID. In specific, this sudden reduction of turnover occurred around April 2020 and the situation gradually recovered after this month. 
+
+
+
+
+```{r}
+retail%>%gg_subseries()+
+  labs(y="$Million AUD",
+      title = "Subseries plot: Total turnover in Clothing, footwear and personal accessory 
+      retailing industry within Queensland")
+```
+
+
+With gg_subseries(), by observing the blue horizontal line for each month, we can also claim that for each year, turnover peaks within December since the line for this month is positioned highest while the turnover is smallest within February with the lowest-positioned blue line. In each month grid, there is an upwards trend for all graphs, which suggests the raise in turnover throughout each year. On the other hand, it is noticeable that the decline in turnover is evident in the fourth grid (April), in which there was a huge drop within the year 2020 due to the drastic effect of COVID-19 and the industry gradually recovered afterwards.
+
+
+
+
+
+
+
+## Explanation of transformations and differencing used
+```{r}
+total_retail <- retail%>%
+  summarise(Turnover = sum(Turnover))
+
+total_retail%>%autoplot(Turnover)+
+  labs(y="$Million AUD",
+      title = "Total turnover in Clothing, footwear and personal accessory retailing industry
+       within Queensland")
+```
+
+
+
+The graph showcases a multiplicative trend of turnover over time. Furthermore, the variance is not constant, or more specifically, the variance increases over time. Therefore, we need to transform our dataset, as an attempt to stabilize the variance. 
+
+```{r}
+total_retail%>%
+  mutate(adjusted_turnover = box_cox(Turnover,guerrero(Turnover)))%>%
+  autoplot(adjusted_turnover)+
+  labs(title = "Plot of adjusted_turnover using box_cox guerrero's method")
+```
+
+
+
+After transforming the data, it is evident that there is a sharp drop around the year 2020 due to the impact of COVID-19 that engendered financial crisis to the industry. Indeed, the variance appears to be more constant after utilizing box_cox Guerrero's method to minimize the variation within our data.
+
+
+
+Subsequently, since we want to produce forecasts of the series using ARIMA model, we also need to consider the possibility of differencing to our dataset. Here, I will utilize the unit-root test to determine the necessity of differencing our transformed data: 
+
+```{r}
+#Using unitroot_kpss to extract the kpss_pvalue
+total_retail%>%
+  mutate(adjusted_turnover = box_cox(Turnover,guerrero(Turnover)))%>%
+  features(adjusted_turnover,unitroot_kpss)
+```
+
+In this case, the p-value is shown as 0.01 (or may be smaller than that), indicating that the null hypothesis is rejected. That is, our transformed data are not stationary. Hence, differencing is necessary to make our data stationary.
+
+
+
+It is important to note that our dataset expresses strong seasonal pattern, so seasonal differencing on the transformed dataset will be necessary for my series to become stationary. Moreover, I also utilized unitroot_nsdiffs just to check the number of times we need to apply seasonal differencing on the series:
+
+```{r}
+# Check number times to perform seasonal differencing using unitroot_nsdiffs 
+total_retail%>%
+  mutate(adjusted_turnover = box_cox(Turnover,guerrero(Turnover)))%>%
+  features(adjusted_turnover,unitroot_nsdiffs)
+```
+
+The value of nsdiffs = 1 means I have to apply seasonal differencing once to my series.
+
+
+```{r}
+# Apply seasonal differencing on the transformed dataset & plot
+total_retail%>%
+  mutate(adjusted_turnover = difference(box_cox(Turnover,guerrero(Turnover)),12))%>%
+  autoplot(adjusted_turnover)+
+  labs(title = "Plot of adjusted_turnover after applying seasonal differencing")
+```
+
+
+The series are observed to fluctuate around value of 0, but not quite, which suggest that our transformed dataset __might not__ be stationary yet. The effect of COVID-19 is noticeable with 2 peaks shown around the year 2020. 
+
+
+As an extra step, I also utilize unitroot_ndiffs to check if our transformed data after seasonal differencing actually need to be further differenced (1st order difference)
+
+```{r}
+#Apply seasonal difference and check for the necessity of 1st order difference
+total_retail%>%
+  mutate(adjusted_turnover = difference(box_cox(Turnover,guerrero(Turnover)),12))%>%
+  features(adjusted_turnover,unitroot_ndiffs)
+```
+
+With ndiffs = 1, our latest transformed data actually needs to be further differenced using 1st order difference. 
+
+```{r}
+#Apply 1st order difference subsequently
+total_retail%>%
+  mutate(adjusted_turnover = difference(difference(box_cox(Turnover,guerrero(Turnover)),12)))%>%
+  autoplot(adjusted_turnover)+
+  labs(title = "Plot of adjusted_turnover after applying 1st order differencing")
+```
+
+As shown above, the series are now clearly scattered around value = 0, which means our latest transformed dataset with one seasonal differencing and one 1st order differencing is stationary. The peaks within the year 2020 are self-explanatory due to the effect of COVID-19. 
+
+
+
+
+Eventually, to ensure that the transformation and differencing to the original dataset make our series stationary, I also utilized unitroot_kpss as below:
+
+```{r}
+#Final check if series are stationary 
+total_retail%>%
+  mutate(adjusted_turnover = difference(difference(box_cox(Turnover,guerrero(Turnover)),12)))%>%
+  features(adjusted_turnover,unitroot_kpss)
+```
+
+The results of kpss_pvalue = 0.1 (or could be larger than 0.1) suggests that our latest transformed and differenced data appear **stationary**.
+
+
+Therefore, to make the series stationary, I have applied one transformation with box_cox guerrero's method, one seasonal differencing to account the strong seasonal pattern and one 1st order differencing as the final step to make the series stationary. 
+
+
+
+
+
+
+## Methodology of short-listing ARIMA models and ETS models & Results explanation
+
+
+Initially, we split the original dataset into training and testing datasets, in which the test set will include the most recent 24 months of the entire data.  
+
+```{r}
+# Convert to a tsibble
+total_retail <- as_tsibble(total_retail, index = Month)
+
+#Train dataset (before December 2020)
+train <- total_retail %>%
+  filter(Month <= yearmonth("2020 Dec"))
+
+#Train dataset (after December 2020)
+test <- total_retail %>%
+  filter(Month > yearmonth("2020 Dec"))
+
+```
+
+
+
+
+
+
+#### 1. ARIMA
+
+In order to create a short-list of appropriate ARIMA models, we will utilize the ACF and PACF plots generated using gg_tsresidual():
+
+```{r}
+total_retail %>%
+  gg_tsdisplay(difference(difference(box_cox(Turnover,guerrero(Turnover)),12)),
+               plot_type='partial', lag=24) +
+  labs(title = "Double differenced", y="")
+```
+
+- With the ACF plot, the significant spike at lag 1 suggests a non-seasonal MA(1) component, and the last significant spike at lag 24 suggests a seasonal MA(2) component. Consequently, we begin with an **ARIMA(0,1,1)(0,1,2)[12]**, indicating a first difference, a seasonal difference, and non-seasonal MA(1) and seasonal MA(2) component. 
+
+- If we only observe the PACF, the last significant spike at lag 4 suggests a non-seasonal AR(4) component and the last significant spike at lag 24 implies a seasonal AR(2) component. Hence, we may have selected an **ARIMA(4,1,0)(2,1,0)[12]** model with a first difference, a seasonal difference, and non-seasonal AR(4) and seasonal AR(2) component
+
+- However, if we also try combining the two choices of ARIMA models above, we could produce a few other options of ARIMA model. Noticing that in the second ARIMA model, we have p=4, so we could choose maybe a smaller p such as p=1,p=3 for the non-seasonal part but in this case, I will choose p=1 since lag 1 has a significant spike when observing the PACF and ultimately obtain an **ARIMA(1,1,1)(2,1,2)[12]** with a first difference, a seasonal difference, non-seasonal AR(4),MA(1) components and seasonal AR(2),MA(2) components. 
+
+
+```{r}
+#Fit training data into 4 models (3 short-listed models + 1 auto chosen by R)
+fit <- train%>%
+    model(
+    arima_ma = ARIMA(box_cox(Turnover,guerrero(Turnover)) ~ pdq(0,1,1) + PDQ(0,1,2)),
+    arima_ar = ARIMA(box_cox(Turnover,guerrero(Turnover)) ~ pdq(4,1,0) + PDQ(2,1,0)),
+    arima_combine = ARIMA(box_cox(Turnover,guerrero(Turnover)) ~ pdq(1,1,1) + PDQ(2,1,2)),
+    auto = ARIMA(box_cox(Turnover,guerrero(Turnover)), stepwise = FALSE, approx = FALSE)
+  )
+```
+
+
+##### Results for ARIMA models
+```{r}
+fit |> pivot_longer(everything(), names_to = "Model name",
+                     values_to = "Orders")
+
+glance(fit) |> arrange(AIC) |> select(.model:BIC)
+```
+
+As shown above, the ARIMA model chosen by R is the same as the "combined" ARIMA model that I suggested (similar Orders), with AIC = -2886.116 and this AIC value is the lowest compared to the rest. Since lower AIC generally means better performance of forecasting the series, the **ARIMA(1,1,1)(2,1,2)[12]** model will indeed be utilized for prediction in our case. However, there might be several factors that need to be considered regarding its performance, such as the diagnostic test for the "innovation" residuals, which will be addressed later in this report.  
+
+
+
+
+
+#### 2. ETS model
+
+The ETS model will have 3 components, in which E, T, and S terms represent Error, Trend, and Seasonality. Therefore, to create a short-list of ETS models, we might want to look at the previous graphs about how the turnover behaves overtime, and simultaneously discover any trend or seasonality present. 
+
+
+```{r}
+retail%>%autoplot(Turnover)+
+  labs(y="$Million AUD",
+      title = "Total turnover in Clothing, footwear and personal accessory retailing industry
+       within Queensland")
+
+retail%>%gg_subseries(Turnover)+
+  labs(y="$Million AUD",
+      title = "Subseries plot: Total turnover in Clothing, footwear and personal accessory 
+      retailing industry within Queensland")
+```
+
+- In terms of trend, the graph generated using "autoplot()" function clearly shows that trend is present. We can observe that the variation increases over time, which might be indicative of the trend being multiplicative. However, the change in variation annually might not be very significant (increases by a fair amount annually) so maybe there is a chance of the trend being additive (as another option for our ETS model). Correspondingly, we could also try to include additive damped trend as a component but since we variation is stronger over time, maybe additive or multiplicative trend might be more appropriate. 
+
+- Similarly, seasonality is present (turnover peaks in December annually), and the seasonality might be multiplicative since the seasonal fluctuations varies correspondingly to the level of our series. 
+
+
+- With errors, since seasonality is likely multiplicative, and previously with ARIMA model selection, we also utilized Box-Cox transformation to stabilize the variance, it is likely that the error component is also multiplicative to account for the variation in our series.  
+
+
+- Overall we will have 4 possible ETS models, including an **ETS(M,M,M)**, an **ETS(M,A,M)**, an **ETS(M,Ad,M)** and one ETS model that is automatically generated by R.  
+
+```{r}
+#Fit training data into 4 models (3 short-listed models + 1 auto chosen by R)
+fit_ets <- train%>%
+  model(
+    mmm = ETS(Turnover ~ error("M") + trend("M")+ season("M")),
+    mam = ETS(Turnover ~ error("M") + trend("A")+ season("M")),
+    madm = ETS(Turnover ~ error("M") + trend("Ad")+ season("M")),
+    auto = ETS(Turnover)
+  )
+```
+
+
+
+##### Results for ETS models
+```{r}
+fit_ets %>% report()
+```
+
+In terms of the AIC, the minimum value in this case is 5132.445, which corresponds to the **ETS(M,M,M) model**. Hence, the ETS(M,M,M) will be one contender, aside the **ARIMA(1,1,1)(2,1,2)[12]** model, when it comes to forecasting our series. Again, diagnostic test with the residuals will be undertaken later on to assess the performance of this ETS(M,M,M) model. 
+
+
+
+
+
+
+
+
+
+## Diagnostic tests and results clarification based on test set
+
+Based on previous analysis of short-listing ARIMA and ETS models, I have identified the best model (with lowest AIC) in each class, which is the ARIMA(1,1,1)(2,1,2)[12] model and the ETS(M,M,M) model. Now, I will commence further diagnostic tests and analyze the results.
+
+
+
+##### 1. ARIMA(1,1,1)(2,1,2)[12] model
+
+Underneath is the report of the estimates, forecasts and the prediction intervals for the **ARIMA(1,1,1)(2,1,2)[12]** model :
+
+```{r}
+arima_best <- fit%>%select(arima_combine)
+
+
+#Report estimates
+report(arima_best)
+
+
+#Produce forecast
+arima_best_fc <- arima_best%>%
+  forecast(h="2 years")
+
+
+#Forecasts and prediction intervals using plots
+autoplot(arima_best_fc) +
+  autolayer(tail(retail,40)) +
+  labs(y="$Million AUD",
+      title = "Predictions of turnover in Clothing, footwear and personal accessory 
+      retailing industry within Queensland using best ARIMA model")
+
+
+#Accuracy (using RMSE)
+accuracy(arima_best_fc,test)%>%select(.model,RMSE)
+
+```
+
+
+Using report(), we obtained the coefficients/estimates (the phi(s) and theta(s)) for each component in our best ARIMA model. For example, phi{1} = 0.2873 corresponds to non-seasonal component AR(1), theta{1} = -0.7518 corresponds to non-seasonal component MA(1), capital_phi{1} = 0.7019 corresponds to seasonal component AR(1) and so on. 
+
+
+The graph showcases the forecasts generated by the ARIMA(1,1,1)(2,1,2)[12] model, with 80% and 95% prediction intervals. Just by observing the plot, we can say that the predicted series are quite decent since a majority of historical data is captured within the prediction intervals (especially after mid 2021). It seems like our ARIMA model is quite sensitive to certain peaks (for example there is a sudden drop around 2021 April but in fact there is no drop). 
+
+
+The RMSE of around 79.3593 might indicate that on average, our predictions might deviate from the actual values around 79 ($Million AUD). However, we cannot discuss if this is a decent value or not, unless we compare this to another RMSE value of another model, which will be touched on when comparing against the best ETS model later in this report. 
+
+
+
+Subsequently, we perform diagnostic test on the residuals
+```{r}
+#Using gg_tsresiduals()
+arima_best%>%
+  gg_tsresiduals() +
+  labs(title = "Residuals analysis for ARIMA model")
+
+
+
+#Using Ljung-box test
+arima_best%>%
+  augment()%>%
+  features(.innov,ljung_box,lag=36,fitdf=6)
+```
+
+By observing the innovation residuals plot generated by gg_tsresiduals() function, the data points are mainly centered around 0. However, there are some outliers around the year 2020, but these data points are self-explanatory due to the drastic effect of COVID-19 on the turnover. 
+
+
+With the ACF, it is evident that all the autocorrelation coefficients lie within the blue-dashed lines. Therefore, I might say our series are white-noise. 
+
+
+With the bottom-right histogram plot, we can also observe a normal/bell-shaped curve, which also suggest that the series are white-noise. 
+
+
+To ensure that there is no pattern existing within the residuals, I also implemented the Ljung-box test. The lb_pvalue is approximately 0.996 for lag = 36, which is way higher than 0.05 (5% significance level). Therefore, it fails to reject the test and this indicates that our ARIMA(1,1,1)(2,1,2)[12] model is an appropriate model. 
+
+
+
+##### 2. ETS(M,M,M) model
+
+Similarly, I also obtain the report of the estimates, forecasts and the prediction intervals for the **ETS(M,M,M)** model :
+
+```{r}
+ets_best <- fit_ets%>%select(mmm)
+
+
+#Report estimates
+report(ets_best)
+
+
+#Produce forecast
+ets_best_fc <- ets_best%>%
+  forecast(h="2 years")
+
+
+#Forecasts and prediction intervals using plots
+autoplot(ets_best_fc) +
+  autolayer(tail(retail,40)) +
+  labs(y="$Million AUD",
+      title = "Predictions of turnover in Clothing, footwear and personal accessory 
+      retailing industry within Queensland using best ETS model")
+
+#Accuracy (using RMSE)
+accuracy(ets_best_fc,test)%>%select(.model,RMSE)
+
+```
+
+To interpret the smoothing parameters:
+- alpha = 0.3134349 suggests moderate responsiveness of our future data (the pace of updating new data is moderate)
+- beta = 0.0001023726 indicates that our ETS model places minimal weight on updating the trend based on new observations, and ultimately, the trend will be quite stable over time
+- gamma = 0.2255025 suggests that it is also at a moderate level, implying a substantial but not overwhelming adjustment for seasonal variations based on new series.
+
+
+The plot demonstrates the forecasts generated by the ETS(M,M,M) model, with 80% and 95% prediction intervals. By observing the plot, the predicted series are also quite decent and the prediction intervals also capture huge number of observed data points. It is observed that only one or two peaks are not captured in overall.
+
+
+
+The RMSE of around 51.42288 indicates that on average, our forecasted series might deviate from the actual values around 51 ($Million AUD). Though this RMSE value is lower than that of the best ARIMA model, we also need to analyze the residuals to assess the performance of the ETS(M,M,M) model. 
+
+
+```{r}
+#Using gg_tsresiduals()
+ets_best%>%
+  gg_tsresiduals() +
+  labs(title = "Residuals analysis for ETS model")
+
+
+
+#Using Ljung-box test
+ets_best%>%
+  augment()%>%
+  features(.innov,ljung_box,lag=36)
+```
+
+
+Looking at the innovation residuals plot generated by gg_tsresiduals() function, the data points are mainly centered around 0. Again, there are self-explanatory outliers in 2020 owing to the negative effect of COVID-19 on the turnover. 
+
+
+With the ACF, it is crucial to note that there is one significant spike at lag 1 and one moderate spike at lag 12. This might suggest that our ETS model does not entirely account for certain changes in the turnover from one period to the next. Furthermore, the yearly seasonal pattern might also not be fully captured by our best ETS model. Hence, the residuals are likely not white noise.
+
+
+With the bottom-right histogram plot, we can also observe a normal/bell-shaped curve, but since there are two autocorrelations outside the blue-dashed lines within the ACF, the residuals might not be white noise.
+
+
+To demonstrate that there is pattern existing within the residuals, I also implemented the Ljung-box test. The lb_pvalue is approximately 0.0028 for lag = 36, which is lower than 0.05 (5% significance level). Therefore, it fails the test and this indicates that our ETS(M,M,M) model might not be an appropriate model. 
+
+
+
+
+## Comparison of ARIMA(1,1,1)(2,1,2)[12] model and ETS(M,M,M)
+
+Given the results, if we compare them with reference to the test-set (using RMSE), then the ETS(M,M,M) model outperforms the ARIMA(1,1,1)(2,1,2)[12] model with a lower RMSE value (51.42288 < 79.3593), which is obtained using accuracy() function between the predicted values and the observed values. However, ETS(M,M,M) model fails the Ljung-box test and pattern exists within the residuals while ARIMA(1,1,1)(2,1,2)[12] model passes the test and has white-noise series. Therefore, when it comes down to the appropriateness of forecasts, ARIMA(1,1,1)(2,1,2)[12] model will produce not better, but reliable forecasts compared to the ETS(M,M,M) model. 
+
+
+## Reapplication of ARIMA(1,1,1)(2,1,2)[12] model and ETS(M,M,M) to entire dataset
+
+Now I will apply the ARIMA(1,1,1)(2,1,2)[12] model and ETS(M,M,M) model to the original series:
+
+```{r}
+
+fit_full <- retail%>%
+    model(
+    best_arima = ARIMA(box_cox(Turnover,guerrero(Turnover)) ~ pdq(1,1,1) + PDQ(2,1,2)),
+    best_ets = ETS(Turnover ~ error("M") + trend("M")+ season("M"))
+  )
+
+```
+
+
+Then, I will report the estimates and plot forecasts with 80% prediction intervals 
+```{r}
+fit_full%>%select(best_arima)%>%report()
+fit_full%>%select(best_ets)%>%report()
+
+
+fit_full_fc <- fit_full%>%
+  forecast(h="2 years")
+
+
+fit_full_fc%>%autoplot(tail(retail,15),level=80,alpha=0.5) +
+  labs(y="$Million AUD",
+      title = "Turnover forecasts from best ETS model and best ARIMA model")
+```
+
+- Above is the plot of forecast for turnover in 2 years after 2022 December. The 80% prediction interval for both models is included, in which the interval for the best ARIMA model is wider than that of the best ETS model. This suggests that my ARIMA model has higher uncertainty or variability in terms of forecasts compared to my ETS model. By observing the gap, it is predictable because previously when comparing the two best models with reference to the test-set, we know that the accuracy (taking RMSE as an example) of the ETS model is higher than that of my ARIMA model. 
+
+
+
+## ABS dataset for comparison of predicted and observed values for Turnover
+
+
+To undertake further analysis regarding the 2-years out-of-sample forecast of my two best models above, now I will obtain recent data from the Australian Bureau of Statistics (ABS) website and perform data cleaning on the new dataset:
+
+```{r warning=FALSE}
+#Read using read_abs_series
+actual_data <- readabs::read_abs_series("A3349884J")%>%
+  select(date,series_id,value)
+
+#Rename column
+actual_data <- actual_data%>%
+  rename(`Series ID`=series_id, Turnover = value)
+
+#Convert into yearmonth column
+library(zoo)
+actual_data$Month <- as.yearmon(actual_data$date)
+actual_data$Month <- yearmonth(actual_data$Month)
+
+
+
+#Add the "Industry" column and "State" column with only 1 unique value for both columns
+actual_data$Industry <- "Clothing, footwear and personal accessory retailing"
+actual_data$State <- "Queensland"
+
+
+#Select necessary columns
+actual_data <- actual_data%>%
+  select(State,Industry,`Series ID`,Month,Turnover)
+
+#Convert into tsibble
+actual_data <- actual_data%>%tsibble()
+```
+
+Then, I will produce a plot showing the out-of-sample forecasts against the actual data obtained from the ABS
+```{r}
+#Forecasts and prediction intervals using plots
+autoplot(fit_full_fc,level = 80,alpha=0.5) +
+  autolayer(tail(actual_data,20)) +
+  labs(y="$Million AUD",
+      title = "Comparison between actual and predicted turnover 
+      using best ARIMA and ETS models")
+```
+
+As demonstrated, the black curve lies within the 80% prediction interval of both of my best models. This also indicates that 80% of the time, I can utilize either the ARIMA(1,1,1)(2,1,2)[12] model or the ETS(M,M,M) model to obtain decent forecasts which will be close to the observed values. 
+
+
+I also want to observe the accuracy for both of my models using the function accuracy() as below:
+
+```{r warning=FALSE}
+test_actual <- actual_data %>%
+  filter(Month > yearmonth("2022 Dec"))
+
+accuracy(fit_full_fc,test_actual)
+```
+
+Once again, the RMSE of the ETS(M,M,M) model is lower than the ARIMA(1,1,1)(2,1,2)[12] model. However, based on several previous diagnostic tests on the residuals, we cannot say ETS(M,M,M) model is better than ARIMA(1,1,1)(2,1,2)[12] model due to its failure of the Ljung-box test and thus having pattern within the residuals.
+
+
+Overall, the results are decent and I believe both of the two best models have adequate predictive performance. 
+
+
+
+
+
+## Benefits and Limitations of using ARIMA(1,1,1)(2,1,2)[12] and ETS(M,M,M) models in our data
+
+
+##### 1. ARIMA(1,1,1)(2,1,2)[12]
+
+**Benefits**
+
+- Flexibility: Our model can handle both non-seasonal and seasonal dynamics in any given dataset. In our case, for example, the ARIMA model is utilize to efficiently clear yearly periodic pattern (turnover peaks in December annually)
+
+- Differencing: The use of differencing for both non-seasonal and seasonal cases helps in stabilizing the variance of our transformed series and thus making the series stationary.
+
+
+**Limitations**
+
+- Complexity in identifying "best" model: Selecting the appropriate order of differencing and the AR and MA terms (both seasonal and non-seasonal) can be quite complex/time-consuming since it requires us to use other techniques or tests such as residuals diagnostic test, or studying the ACF, PACF plots for autocorrelation.  
+
+
+- Strong sensitivity: Based on the latest plot of comparison between the observed-predicted values, we can observe that sometimes, the pink curve (representing my best ARIMA model) has peaks, around 2023 Apr for example, while there is no peak observed around this time for the black curve (actual data). 
+
+
+##### 2. ETS(M,M,M)
+
+**Benefits**
+
+- Exponential Smoothing: Our ETS model utilizes this technique to account for the multiplicative error,trend and seasonal changes in our retail data. 
+
+- Simplicity: ETS components are not difficult to be identified. For instance, we immediately know in our retail data that the seasonality might be multiplicative when the variance is higher over time. Furthermore, our ETS model also produced highly accurate forecasts (low RMSE value), given that our series exhibits periodic seasonal patterns and growth rates.
+
+
+**Limitations**
+
+- Prediction interval is narrow: It is observed that when comparing between the two best ETS and ARIMA models, the 80% prediction interval for ETS model is narrower. Hence, occasionally, there are certain unexpected peaks that cannot be captured by our ETS model. One example is that when plotting the observed-predicted plot, with the test set ranges from 2021 Jan to 2022 Dec, the sudden drop of actual values around July 2021 is not captured within the interval, while this sharp drop is successfully captured within the 80% prediction interval of the best ARIMA model. 
+
+
+
+
+
+
+
+
+
+
+
+
