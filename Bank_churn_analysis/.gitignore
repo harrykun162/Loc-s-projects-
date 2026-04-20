@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# Environments
+.env.local
+.env.production
+venv/
+.venv/
+env/
+
+# Data — never commit raw/processed data
+data/raw/
+data/processed/
+data/external/
+
+# Model artifacts — large binary files
+artifacts/*.pkl
+artifacts/*.joblib
+artifacts/plots/
+
+# MLflow
+mlruns/
+
+# Test / coverage
+.pytest_cache/
+htmlcov/
+.coverage
+artifacts/coverage/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+artifacts/*.log
+
+# Jupyter
+.ipynb_checkpoints/
+notebooks/.ipynb_checkpoints/
+
+# Docker
+docker/*.env

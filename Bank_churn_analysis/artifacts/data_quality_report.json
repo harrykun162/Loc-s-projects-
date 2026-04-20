@@ -1,0 +1,16 @@
+{
+  "n_rows": 10000,
+  "n_cols": 13,
+  "duplicate_ids": 0,
+  "null_counts": {},
+  "churn_rate": 0.2037,
+  "geographies": [
+    "France",
+    "Spain",
+    "Germany"
+  ],
+  "genders": [
+    "Female",
+    "Male"
+  ]
+}

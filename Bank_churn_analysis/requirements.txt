@@ -1,0 +1,24 @@
+pandas
+numpy
+scikit-learn
+mlflow
+fastapi
+uvicorn
+streamlit
+pydantic
+python-dotenv
+joblib
+great-expectations
+pytest
+seaborn
+matplotlib
+pyarrow>=14.0
+xgboost
+imbalanced-learn
+optuna
+shap
+ipykernel
+jupyter
+
+# Optional: For statistical analysis and modeling
+statsmodels

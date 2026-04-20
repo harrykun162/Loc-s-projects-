@@ -1,0 +1,79 @@
+project:
+  name: "bank_churn_analysis"
+  version: "1.0.0"
+
+paths:
+  raw_data:       "data/raw/Bank_churn_RFM.csv"
+  processed_data: "data/processed/features.parquet"
+  rfm_data:       "data/processed/rfm_master.parquet"
+  model_dir:      "artifacts/"
+  best_model:     "artifacts/best_model.pkl"
+  scaler:         "artifacts/scaler.pkl"
+  feature_names:  "artifacts/feature_names.json"
+
+data:
+  target_col:     "Exited"
+  customer_id:    "CustomerId"
+  drop_cols:      ["CustomerId", "Surname"]
+  categorical:    ["Geography", "Gender"]
+  numeric:
+    - CreditScore
+    - Age
+    - Tenure
+    - Balance
+    - NumOfProducts
+    - HasCrCard
+    - IsActiveMember
+    - EstimatedSalary
+
+rfm:
+  r_activity_weight: 1.0
+  r_tenure_scale:    10.0
+  m_balance_weight:  0.70
+  m_salary_weight:   0.30
+  n_quintiles:       5
+  segments:
+    "13": "Champion"
+    "10": "Loyal Customer"
+    "7":  "Potential Loyalist"
+    "4":  "At Risk"
+    "0":  "Lost / Hibernating"
+
+features:
+  age_bins:        [0, 20, 30, 40, 50, 60, 100]
+  age_labels:      ["<20", "20-29", "30-39", "40-49", "50-59", "60+"]
+  balance_bins:    [-1, 0, 25000, 50000, 100000, 150000, 1e9]
+  balance_labels:  ["Zero", "1-25k", "25-50k", "50-100k", "100-150k", "150k+"]
+
+model:
+  test_size:          0.20
+  random_state:       42
+  cv_folds:           5
+  decision_threshold: 0.40
+  use_smote:          true
+  smote_k:            5
+  xgb_params:
+    n_estimators:       500
+    max_depth:          6
+    learning_rate:      0.05
+    subsample:          0.8
+    colsample_bytree:   0.8
+    min_child_weight:   5
+    gamma:              0.1
+    reg_alpha:          0.1
+    reg_lambda:         1.0
+    scale_pos_weight:   4
+    random_state:       42
+    n_jobs:             -1
+
+mlflow:
+  tracking_uri:     "mlruns"
+  experiment_name:  "bank_churn_rfm"
+  registered_model: "ChurnClassifier"
+
+app:
+  host:   "0.0.0.0"
+  port:   8000
+  debug:  true
+  title:  "Bank Churn Prediction API"
+  description: "RFM-enhanced churn prediction for European bank customers"
