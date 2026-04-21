@@ -29,6 +29,9 @@ data:
 rfm:
   r_activity_weight: 1.0
   r_tenure_scale:    10.0
+  f_products_weight: 0.60
+  f_active_weight: 0.25
+  f_card_weight: 0.15
   m_balance_weight:  0.70
   m_salary_weight:   0.30
   n_quintiles:       5
