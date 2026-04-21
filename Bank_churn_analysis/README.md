@@ -1,118 +1,292 @@
-# Bank Churn Analysis — End-to-End ML Pipeline
+# Bank Churn Analysis
 
-RFM-enhanced churn prediction for European bank customers,
-served via a FastAPI localhost website with a full web UI.
-The project can also be deployed with Streamlit for a simpler hosted frontend.
+## Project Overview
 
----
+This project is an end-to-end machine learning application for predicting customer churn in a retail banking context.
 
-## Project structure
-```
+The main goal is to help a bank identify customers who are likely to leave, understand their customer value profile, and recommend a practical retention action. The project combines:
+
+- Churn prediction using supervised machine learning
+- RFM-style customer segmentation using banking behavior proxies
+- A local Streamlit UI for interactive predictions
+- A FastAPI service for API-based predictions
+- MLflow tracking for experiment metrics and model artifacts
+- Optional Docker serving for the trained model
+
+The final application allows a user to enter a customer profile and receive:
+
+- Predicted churn probability
+- Churn risk tier
+- RFM score breakdown
+- RFM customer segment
+- Retention priority
+- Recommended retention action
+
+## Business Aim
+
+Customer churn is expensive for banks because acquiring a new customer usually costs more than retaining an existing one. This project aims to support proactive retention by forecasting whether a customer is likely to churn and by adding RFM-style context to explain the customer's relationship quality.
+
+In this project, RFM is adapted for bank customer data:
+
+- Recency proxy: customer activity and tenure
+- Frequency proxy: number of products, active membership, and credit card ownership
+- Monetary proxy: account balance and estimated salary
+
+The model predicts churn probability, while the RFM logic helps translate the prediction into a more business-friendly customer segment and action recommendation.
+
+## Project Structure
+
+```text
 Bank_churn_analysis/
-│
-├── data/
-│   ├── raw/                    ← Drop bank_customers.csv here
-│   ├── processed/              ← Auto-generated parquet files
-│   └── external/               ← Any reference data
-│
-├── notebooks/                  ← EDA.ipynb (exploratory work)
-│
-├── src/
-│   ├── data/ingest.py          ← Step 1: load, validate, persist
-│   ├── features/rfm.py         ← Step 2: RFM proxy engineering
-│   ├── features/engineer.py    ← Step 3: ML feature matrix
-│   ├── models/train.py         ← Step 4: LR + RF + XGBoost + Optuna
-│   ├── models/evaluate.py      ← Step 5: metrics, ROC, SHAP
-│   └── utils/
-│       ├── config_loader.py    ← YAML + .env settings singleton
-│       └── logger.py           ← Structured rotating logger
-│
-├── app/
-│   ├── main.py                 ← FastAPI app (all routes + web UI)
-│   ├── predictor.py            ← Inference engine (loaded once)
-│   └── schemas.py              ← Pydantic request/response models
-│
-├── configs/
-│   └── config.yaml             ← All project settings
-│
-├── scripts/
-│   ├── train_pipeline.py       ← Full training run
-│   └── start_app.py            ← App launcher with env awareness
-│
-├── tests/
-│   ├── test_api.py             ← FastAPI endpoint tests
-│   └── test_features.py        ← Feature engineering unit tests
-│
-├── great_expectations/
-│   └── validate.py             ← Data quality expectation suite
-│
-├── docker/
-│   ├── Dockerfile              ← Multi-stage production image
-│   └── docker-compose.yml      ← API + MLflow services
-│
-├── .github/workflows/
-│   └── ci.yml                  ← GitHub Actions: lint, test, docker
-│
-├── .env                        ← Environment variables
-├── Makefile                    ← One-command workflows
-└── requirements.txt
+|
+|-- app/
+|   |-- main.py              # FastAPI app and browser UI
+|   |-- predictor.py         # Inference layer used by FastAPI and Streamlit
+|   |-- schemas.py           # Request and response validation
+|   |-- streamlit_app.py     # Streamlit UI
+|
+|-- configs/
+|   |-- config.yaml          # Project paths, model settings, RFM weights
+|
+|-- data/
+|   |-- raw/                 # Place the raw CSV dataset here
+|   |-- processed/           # Generated processed data
+|
+|-- docker/
+|   |-- Dockerfile
+|   |-- docker-compose.yml
+|
+|-- scripts/
+|   |-- train_pipeline.py    # Full training pipeline
+|   |-- start_app.py         # FastAPI launcher
+|
+|-- src/
+|   |-- data/ingest.py       # Load and validate data
+|   |-- features/engineer.py # Feature engineering
+|   |-- features/rfm.py      # RFM scoring and segmentation
+|   |-- models/train.py      # Model training
+|   |-- models/evaluate.py   # Evaluation and plots
+|   |-- utils/               # Config and logging helpers
+|
+|-- tests/                   # Unit and API tests
+|-- artifacts/               # Generated trained models and reports
+|-- requirements.txt
+|-- README.md
 ```
 
----
+## Requirements
 
-## Quickstart (5 steps)
+Recommended environment:
 
-```bash
-# 1. Install dependencies
-make install
+- Python 3.11
+- Windows PowerShell, macOS terminal, or Linux shell
+- Docker Desktop, only if you want to serve the app with Docker
 
-# 2. Place your dataset
-cp bank_churn_RFM.csv data/raw/
+Install Python dependencies from:
 
-# 3. Validate data quality
-make validate
-
-# 4. Train all models
-make train-fast          # fast (no Optuna tuning)
-make train               # full (with Optuna, ~5–10 min)
-
-# 5. Start the web app
-make serve
-make serve-streamlit
+```text
+requirements.txt
 ```
 
-Then open your browser at **http://localhost:8000/ui**
-or **http://localhost:8501** for Streamlit.
+## Quickstart: Run Locally With Streamlit
 
----
+The recommended beginner-friendly workflow is:
 
-## URLs
+1. Install dependencies
+2. Place the dataset in the expected folder
+3. Train the model pipeline
+4. Launch the Streamlit UI
 
-| URL | Description |
-|-----|-------------|
-| `http://localhost:8000/ui`    | Interactive web UI — predict churn for any customer |
-| `http://localhost:8000/docs`  | Auto-generated Swagger API documentation |
-| `http://localhost:8000/redoc` | ReDoc API documentation |
-| `http://localhost:8000/health`| Health check (JSON) |
-| `http://localhost:5000`       | MLflow experiment tracking UI |
+Run all commands from the `Bank_churn_analysis` folder.
 
----
+### 1. Move Into The Project Folder
 
-## API endpoints
+If you are currently in the parent repository folder:
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET`  | `/health`        | Liveness probe |
-| `GET`  | `/model/info`    | Model metadata |
-| `POST` | `/predict`       | Single customer prediction |
-| `POST` | `/predict/batch` | Batch prediction (up to 5,000) |
-| `GET`  | `/ui`            | Web UI |
+```powershell
+cd Bank_churn_analysis
+```
 
-### Single prediction example
+### 2. Create And Activate A Virtual Environment
+
+On Windows PowerShell:
+
+```powershell
+python -m venv ..\venv
+..\venv\Scripts\Activate.ps1
+```
+
+On macOS or Linux:
 
 ```bash
-curl -X POST http://localhost:8000/predict \
-  -H "Content-Type: application/json" \
+python -m venv ../venv
+source ../venv/bin/activate
+```
+
+### 3. Install Dependencies
+
+```powershell
+pip install -r requirements.txt
+```
+
+### 4. Add The Dataset
+
+Place the raw dataset here:
+
+```text
+data/raw/Bank_churn_RFM.csv
+```
+
+The default raw data path is configured in:
+
+```text
+configs/config.yaml
+```
+
+If your file has a different name, either rename it to `Bank_churn_RFM.csv` or update the `paths.raw_data` value in `configs/config.yaml`.
+
+### 5. Train The Model Pipeline
+
+For a faster training run without Optuna tuning:
+
+```powershell
+python scripts/train_pipeline.py --no-tune
+```
+
+For the full training run with Optuna tuning:
+
+```powershell
+python scripts/train_pipeline.py
+```
+
+The training pipeline will:
+
+- Load and validate the raw dataset
+- Create processed data
+- Engineer model features
+- Train Logistic Regression, Random Forest, and XGBoost models
+- Select the best model by test ROC-AUC
+- Save the trained pipeline and feature schema
+- Generate evaluation metrics and plots
+- Log metrics and artifacts to MLflow
+
+After training, these files should exist:
+
+```text
+artifacts/best_model.pkl
+artifacts/feature_names.json
+data/processed/features.parquet
+```
+
+These files are required for local prediction.
+
+### 6. Launch The Streamlit UI
+
+```powershell
+streamlit run app/streamlit_app.py
+```
+
+Open the local Streamlit app at:
+
+```text
+http://localhost:8501
+```
+
+Use the form to enter a customer profile and click `Predict Churn Risk`.
+
+## Optional: Run The FastAPI UI
+
+The project also includes a FastAPI service with a browser-based UI and API endpoints.
+
+Start the FastAPI app:
+
+```powershell
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+Open:
+
+```text
+http://localhost:8000/ui
+```
+
+API documentation is available at:
+
+```text
+http://localhost:8000/docs
+```
+
+Health check:
+
+```text
+http://localhost:8000/health
+```
+
+## Optional: Run With Docker
+
+Docker is used to serve an already-trained model. It does not train the model by default.
+
+Train locally first:
+
+```powershell
+python scripts/train_pipeline.py
+```
+
+Then start the API container:
+
+```powershell
+docker compose -f docker/docker-compose.yml up --build -d api
+```
+
+Open:
+
+```text
+http://localhost:8000/ui
+```
+
+Check container logs:
+
+```powershell
+docker logs bank_churn_api
+```
+
+Stop the container:
+
+```powershell
+docker compose -f docker/docker-compose.yml down
+```
+
+If Docker cannot connect to the Docker engine, open Docker Desktop first and wait until it is fully running.
+
+## MLflow Tracking
+
+Training runs are logged with MLflow. MLflow stores model metrics, plots, and artifacts under:
+
+```text
+mlruns/
+```
+
+To open the MLflow UI locally:
+
+```powershell
+mlflow ui --port 5000 --backend-store-uri mlruns
+```
+
+Then open:
+
+```text
+http://localhost:5000
+```
+
+Note: the current project logs MLflow artifacts, but it does not register the model in the MLflow Model Registry by default.
+
+## Prediction API Example
+
+After starting the FastAPI app, you can send a single prediction request:
+
+```powershell
+curl -X POST http://localhost:8000/predict `
+  -H "Content-Type: application/json" `
   -d '{
     "CreditScore": 650,
     "Geography": "France",
@@ -127,107 +301,125 @@ curl -X POST http://localhost:8000/predict \
   }'
 ```
 
-Response:
+Example response:
+
 ```json
 {
-  "churn_probability":  0.2341,
-  "churn_predicted":    0,
-  "risk_segment":       "Low",
-  "rfm_score":          11,
-  "rfm_segment":        "Loyal Customer",
+  "churn_probability": 0.3595,
+  "churn_predicted": 0,
+  "risk_segment": "Medium",
+  "rfm_score": 10,
+  "rfm_segment": "Loyal Customer",
   "retention_priority": 4,
-  "r_score":            4,
-  "f_score":            3,
-  "m_score":            4,
-  "recommendation":     "Upsell opportunity — cross-sell one additional product."
+  "r_score": 4,
+  "f_score": 3,
+  "m_score": 3,
+  "recommendation": "Upsell opportunity - cross-sell one additional product."
 }
 ```
 
----
+## RFM Logic
 
-## Running tests
+The RFM component gives business context to the churn prediction.
 
-```bash
-make test           # all tests
-make test-cov       # with HTML coverage report
-pytest tests/test_features.py -v   # feature tests only
-pytest tests/test_api.py -v        # API tests only
+Current RFM proxies:
+
+- `R_raw`: based on active membership and tenure
+- `F_raw`: based on number of products, active membership, and credit card ownership
+- `M_raw`: based on balance and estimated salary
+
+The app scores new customers against the processed training population in:
+
+```text
+data/processed/features.parquet
 ```
 
----
+This is important because RFM scores are relative. If this file is missing, retrain the pipeline:
 
-## Docker
-
-```bash
-make docker-build   # build image
-make docker-up      # start API + MLflow
-make docker-down    # stop services
+```powershell
+python scripts/train_pipeline.py
 ```
 
----
+## Running Tests
 
-## MLflow
+Run all tests:
 
-```bash
-make mlflow-ui      # open tracking UI at http://localhost:5000
+```powershell
+pytest tests/ -v --tb=short
 ```
 
-MLflow tracks every training run with:
-- All hyperparameters (XGBoost, RF, LR)
-- CV metrics (ROC-AUC, F1, precision, recall)
-- SHAP plots, confusion matrix, ROC/PR curves
-- Model artifacts registered in Model Registry
+Run feature tests only:
 
----
-
-## Make commands reference
-
-```bash
-make help           # show all commands
-make install        # install dependencies
-make validate       # run Great Expectations suite
-make train          # full training with Optuna
-make train-fast     # training without tuning
-make serve          # start dev server (hot reload)
-make serve-prod     # start production server
-make test           # run all tests
-make test-cov       # tests + coverage
-make lint           # ruff linter
-make mlflow-ui      # open MLflow dashboard
-make docker-build   # build Docker image
-make docker-up      # start all services
-make serve-streamlit # start Streamlit on port 8501
-make clean          # remove caches
+```powershell
+pytest tests/test_features.py -v
 ```
 
----
+Run API tests only:
 
-## Streamlit deployment
+```powershell
+pytest tests/test_api.py -v
+```
 
-Use `app/streamlit_app.py` as the Streamlit entrypoint.
+## Troubleshooting
 
-### Local run
+### Streamlit says the model is missing
 
-```bash
-pip install -r requirements.txt
+Run the training pipeline first:
+
+```powershell
+python scripts/train_pipeline.py
+```
+
+Then restart Streamlit:
+
+```powershell
 streamlit run app/streamlit_app.py
 ```
 
-### Streamlit Community Cloud settings
+### RFM scores look neutral or do not change
 
-- Main file path: `app/streamlit_app.py`
-- Install command: `pip install -r requirements.txt`
-- Python version: `3.11` is a safe target for this stack
+Make sure the processed reference dataset exists:
 
-### Required deployment artifacts
+```text
+data/processed/features.parquet
+```
 
-- `artifacts/best_model.pkl`
-- `artifacts/feature_names.json`
-- `configs/config.yaml`
+If it is missing, rerun training.
 
-### Recommended app structure for Streamlit
+### Docker cannot connect to the Docker API
 
-- Keep `app/predictor.py` as the inference layer.
-- Use Streamlit as the frontend instead of the current `/ui` HTML route.
-- Load the model with `st.cache_resource` so it initializes once per app process.
-- Validate user inputs with `CustomerInput` before scoring.
+Open Docker Desktop and wait until it is running. Then test:
+
+```powershell
+docker version
+docker info
+```
+
+After Docker is healthy, rerun:
+
+```powershell
+docker compose -f docker/docker-compose.yml up --build -d api
+```
+
+### Make commands do not work
+
+The `Makefile` is mainly useful in Unix-like environments. For Windows users, the recommended workflow is to use the direct Python, Streamlit, Uvicorn, Docker, and Pytest commands shown in this README.
+
+## Recommended Local Workflow
+
+For most users, this is the simplest complete workflow:
+
+```powershell
+cd Bank_churn_analysis
+python -m venv ..\venv
+..\venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+python scripts/train_pipeline.py --no-tune
+streamlit run app/streamlit_app.py
+```
+
+Then open:
+
+```text
+http://localhost:8501
+```
