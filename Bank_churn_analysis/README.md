@@ -186,137 +186,8 @@ These files are required for local prediction.
 streamlit run app/streamlit_app.py
 ```
 
-Open the local Streamlit app at:
-
-```text
-http://localhost:8501
-```
-
 Use the form to enter a customer profile and click `Predict Churn Risk`.
 
-## Optional: Run The FastAPI UI
-
-The project also includes a FastAPI service with a browser-based UI and API endpoints.
-
-Start the FastAPI app:
-
-```powershell
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-Open:
-
-```text
-http://localhost:8000/ui
-```
-
-API documentation is available at:
-
-```text
-http://localhost:8000/docs
-```
-
-Health check:
-
-```text
-http://localhost:8000/health
-```
-
-## Optional: Run With Docker
-
-Docker is used to serve an already-trained model. It does not train the model by default.
-
-Train locally first:
-
-```powershell
-python scripts/train_pipeline.py
-```
-
-Then start the API container:
-
-```powershell
-docker compose -f docker/docker-compose.yml up --build -d api
-```
-
-Open:
-
-```text
-http://localhost:8000/ui
-```
-
-Check container logs:
-
-```powershell
-docker logs bank_churn_api
-```
-
-Stop the container:
-
-```powershell
-docker compose -f docker/docker-compose.yml down
-```
-
-If Docker cannot connect to the Docker engine, open Docker Desktop first and wait until it is fully running.
-
-## MLflow Tracking
-
-Training runs are logged with MLflow. MLflow stores model metrics, plots, and artifacts under:
-
-```text
-mlruns/
-```
-
-To open the MLflow UI locally:
-
-```powershell
-mlflow ui --port 5000 --backend-store-uri mlruns
-```
-
-Then open:
-
-```text
-http://localhost:5000
-```
-
-Note: the current project logs MLflow artifacts, but it does not register the model in the MLflow Model Registry by default.
-
-## Prediction API Example
-
-After starting the FastAPI app, you can send a single prediction request:
-
-```powershell
-curl -X POST http://localhost:8000/predict `
-  -H "Content-Type: application/json" `
-  -d '{
-    "CreditScore": 650,
-    "Geography": "France",
-    "Gender": "Male",
-    "Age": 42,
-    "Tenure": 5,
-    "Balance": 75000.0,
-    "NumOfProducts": 2,
-    "HasCrCard": 1,
-    "IsActiveMember": 1,
-    "EstimatedSalary": 98000.0
-  }'
-```
-
-Example response:
-
-```json
-{
-  "churn_probability": 0.3595,
-  "churn_predicted": 0,
-  "risk_segment": "Medium",
-  "rfm_score": 10,
-  "rfm_segment": "Loyal Customer",
-  "retention_priority": 4,
-  "r_score": 4,
-  "f_score": 3,
-  "m_score": 3,
-  "recommendation": "Upsell opportunity - cross-sell one additional product."
-}
-```
 
 ## RFM Logic
 
@@ -360,31 +231,6 @@ Run API tests only:
 pytest tests/test_api.py -v
 ```
 
-## Troubleshooting
-
-### Streamlit says the model is missing
-
-Run the training pipeline first:
-
-```powershell
-python scripts/train_pipeline.py
-```
-
-Then restart Streamlit:
-
-```powershell
-streamlit run app/streamlit_app.py
-```
-
-### RFM scores look neutral or do not change
-
-Make sure the processed reference dataset exists:
-
-```text
-data/processed/features.parquet
-```
-
-If it is missing, rerun training.
 
 ### Docker cannot connect to the Docker API
 
@@ -401,10 +247,6 @@ After Docker is healthy, rerun:
 docker compose -f docker/docker-compose.yml up --build -d api
 ```
 
-### Make commands do not work
-
-The `Makefile` is mainly useful in Unix-like environments. For Windows users, the recommended workflow is to use the direct Python, Streamlit, Uvicorn, Docker, and Pytest commands shown in this README.
-
 ## Recommended Local Workflow
 
 For most users, this is the simplest complete workflow:
@@ -416,10 +258,4 @@ python -m venv ..\venv
 pip install -r requirements.txt
 python scripts/train_pipeline.py --no-tune
 streamlit run app/streamlit_app.py
-```
-
-Then open:
-
-```text
-http://localhost:8501
 ```
