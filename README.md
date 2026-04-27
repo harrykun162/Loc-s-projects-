@@ -10,7 +10,7 @@
 
 ###
 
-<p align="left">✨ I am fond of building machine learning models !<br>📚 I have graduated with a First Class Honours at Monash with a thesis about the application of Detection Transformer in live traffic.<br>🎯 Goals: I want to become an all-rounder that can build any model that comes into mind.<br>🎲
+<p align="left">✨ I am fond of building machine learning models !<br>📚 I have graduated with a First Class Honours at Monash with a thesis about the application of Detection Transformer in live traffic.<br>🎯 Goals: I want to become an all-rounder that can build any model that comes into mind.<br>🎲 I played for Monash's Varsity Team, competing in Valorant - an FPS competitive shooting game. Last year, we ranked 1st out of all participating universities in the Australian Esports League, securing a total prize of up to 2000 AUD.  
 
 ###
 
