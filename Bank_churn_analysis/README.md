@@ -186,12 +186,6 @@ These files are required for local prediction.
 streamlit run app/streamlit_app.py
 ```
 
-Open the local Streamlit app at:
-
-```text
-http://localhost:8501
-```
-
 Use the form to enter a customer profile and click `Predict Churn Risk`.
 
 ## Run With Docker
@@ -279,10 +273,4 @@ python -m venv ..\venv
 pip install -r requirements.txt
 python scripts/train_pipeline.py --no-tune
 streamlit run app/streamlit_app.py
-```
-
-Then open:
-
-```text
-http://localhost:8501
 ```
