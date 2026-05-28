@@ -194,35 +194,7 @@ http://localhost:8501
 
 Use the form to enter a customer profile and click `Predict Churn Risk`.
 
-## Optional: Run The FastAPI UI
-
-The project also includes a FastAPI service with a browser-based UI and API endpoints.
-
-Start the FastAPI app:
-
-```powershell
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-Open:
-
-```text
-http://localhost:8000/ui
-```
-
-API documentation is available at:
-
-```text
-http://localhost:8000/docs
-```
-
-Health check:
-
-```text
-http://localhost:8000/health
-```
-
-## Optional: Run With Docker
+## Run With Docker
 
 Docker is used to serve an already-trained model. It does not train the model by default.
 
@@ -257,28 +229,6 @@ docker compose -f docker/docker-compose.yml down
 ```
 
 If Docker cannot connect to the Docker engine, open Docker Desktop first and wait until it is fully running.
-
-## MLflow Tracking
-
-Training runs are logged with MLflow. MLflow stores model metrics, plots, and artifacts under:
-
-```text
-mlruns/
-```
-
-To open the MLflow UI locally:
-
-```powershell
-mlflow ui --port 5000 --backend-store-uri mlruns
-```
-
-Then open:
-
-```text
-http://localhost:5000
-```
-
-Note: the current project logs MLflow artifacts, but it does not register the model in the MLflow Model Registry by default.
 
 ## Prediction API Example
 
@@ -317,93 +267,6 @@ Example response:
   "recommendation": "Upsell opportunity - cross-sell one additional product."
 }
 ```
-
-## RFM Logic
-
-The RFM component gives business context to the churn prediction.
-
-Current RFM proxies:
-
-- `R_raw`: based on active membership and tenure
-- `F_raw`: based on number of products, active membership, and credit card ownership
-- `M_raw`: based on balance and estimated salary
-
-The app scores new customers against the processed training population in:
-
-```text
-data/processed/features.parquet
-```
-
-This is important because RFM scores are relative. If this file is missing, retrain the pipeline:
-
-```powershell
-python scripts/train_pipeline.py
-```
-
-## Running Tests
-
-Run all tests:
-
-```powershell
-pytest tests/ -v --tb=short
-```
-
-Run feature tests only:
-
-```powershell
-pytest tests/test_features.py -v
-```
-
-Run API tests only:
-
-```powershell
-pytest tests/test_api.py -v
-```
-
-## Troubleshooting
-
-### Streamlit says the model is missing
-
-Run the training pipeline first:
-
-```powershell
-python scripts/train_pipeline.py
-```
-
-Then restart Streamlit:
-
-```powershell
-streamlit run app/streamlit_app.py
-```
-
-### RFM scores look neutral or do not change
-
-Make sure the processed reference dataset exists:
-
-```text
-data/processed/features.parquet
-```
-
-If it is missing, rerun training.
-
-### Docker cannot connect to the Docker API
-
-Open Docker Desktop and wait until it is running. Then test:
-
-```powershell
-docker version
-docker info
-```
-
-After Docker is healthy, rerun:
-
-```powershell
-docker compose -f docker/docker-compose.yml up --build -d api
-```
-
-### Make commands do not work
-
-The `Makefile` is mainly useful in Unix-like environments. For Windows users, the recommended workflow is to use the direct Python, Streamlit, Uvicorn, Docker, and Pytest commands shown in this README.
 
 ## Recommended Local Workflow
 
