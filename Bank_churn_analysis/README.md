@@ -34,6 +34,28 @@ In this project, RFM is adapted for bank customer data:
 
 The model predicts churn probability, while the RFM logic helps translate the prediction into a more business-friendly customer segment and action recommendation.
 
+## Dashboard General Findings
+
+The Power BI executive overview below summarises churn performance, customer mix, and RFM-based retention risk.
+
+![Executive overview dashboard](Visualisations/executive_overview.png)
+
+### Key Insights
+
+- Overall churn rate is `20.37%`, with `2,037` churned customers out of `10,000` total customers.
+- The average RFM score is `9.00`, suggesting the customer base is concentrated around a mid-tier relationship strength rather than being heavily weighted toward the highest-value segment.
+- `Lost / hibernating` customers have the highest churn rate at `34.04%`, followed by `At risk` customers at `29.03%`.
+- `Loyal customer` has the lowest churn rate at `15.24%`, showing that stronger relationship quality is associated with lower churn.
+- The largest customer groups are `Loyal customer` at `38.25%` and `Potential loyalist` at `37.76%`, so even moderate churn in these groups can create a large absolute number of lost customers.
+- Germany has the highest churn rate at `32.44%`, almost double Spain at `16.67%` and France at `16.15%`.
+- Female customers show a higher churn rate at `25.07%` compared with male customers at `16.46%`.
+
+### Business Implications
+
+- Retention campaigns should prioritise `Lost / hibernating` and `At risk` customers because these groups show the highest churn rates.
+- Germany should be investigated as a market-specific churn issue. Pricing, product experience, service quality, or competitor pressure may be materially different from France and Spain.
+- The bank should protect the large `Loyal customer` and `Potential loyalist` base with early engagement, cross-sell discipline, and proactive service because these groups represent most of the portfolio.
+
 ## Project Structure
 
 ```text
@@ -88,6 +110,7 @@ Bank_churn_analysis/
 |
 |-- Visualisations/
 |   |-- Bank_churn_analysis.pbix     # Power BI dashboard file
+|   |-- executive_overview.png       # Cropped dashboard image for README insights
 |   |-- rfm_feature_engineering.sql  # SQL version of RFM logic
 |   |-- table_creation.sql           # SQL table setup
 |
@@ -97,9 +120,6 @@ Bank_churn_analysis/
 |-- requirements.txt
 |-- README.md
 ```
-
-Local/generated folders such as `venv/`, `mlruns/`, `.pytest_cache/`, `__pycache__/`, model `.pkl` files, logs, and raw/processed datasets are excluded from the source-oriented structure above and should generally stay out of GitHub.
-
 ## Requirements
 
 Recommended environment:
