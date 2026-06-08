@@ -39,40 +39,66 @@ The model predicts churn probability, while the RFM logic helps translate the pr
 ```text
 Bank_churn_analysis/
 |
+|-- .github/
+|   |-- workflows/ci.yml             # GitHub Actions workflow
+|
 |-- app/
-|   |-- main.py              # FastAPI app and browser UI
-|   |-- predictor.py         # Inference layer used by FastAPI and Streamlit
-|   |-- schemas.py           # Request and response validation
-|   |-- streamlit_app.py     # Streamlit UI
+|   |-- main.py                      # FastAPI app and browser UI
+|   |-- predictor.py                 # Inference layer used by FastAPI and Streamlit
+|   |-- schemas.py                   # Request and response validation
+|   |-- streamlit_app.py             # Streamlit UI
+|
+|-- artifacts/
+|   |-- classification_report.json   # Generated model evaluation report
+|   |-- data_quality_report.json     # Generated data validation report
+|   |-- feature_names.json           # Generated feature schema used at inference
 |
 |-- configs/
-|   |-- config.yaml          # Project paths, model settings, RFM weights
+|   |-- config.yaml                  # Project paths, model settings, RFM weights
 |
 |-- data/
-|   |-- raw/                 # Place the raw CSV dataset here
-|   |-- processed/           # Generated processed data
+|   |-- raw/                         # Place the raw CSV dataset here
+|   |-- processed/                   # Generated processed data
 |
 |-- docker/
-|   |-- Dockerfile
-|   |-- docker-compose.yml
+|   |-- Dockerfile                   # Container image for API serving
+|   |-- docker-compose.yml           # Docker Compose service definition
+|
+|-- great_expectations/
+|   |-- validate.py                  # Data validation checks
+|
+|-- notebooks/                       # Optional notebook workspace
 |
 |-- scripts/
-|   |-- train_pipeline.py    # Full training pipeline
-|   |-- start_app.py         # FastAPI launcher
+|   |-- train_pipeline.py            # Full training pipeline
+|   |-- start_app.py                 # FastAPI launcher
 |
 |-- src/
-|   |-- data/ingest.py       # Load and validate data
-|   |-- features/engineer.py # Feature engineering
-|   |-- features/rfm.py      # RFM scoring and segmentation
-|   |-- models/train.py      # Model training
-|   |-- models/evaluate.py   # Evaluation and plots
-|   |-- utils/               # Config and logging helpers
+|   |-- data/ingest.py               # Load and validate data
+|   |-- features/engineer.py         # Feature engineering
+|   |-- features/rfm.py              # RFM scoring and segmentation
+|   |-- models/train.py              # Model training
+|   |-- models/evaluate.py           # Evaluation and plots
+|   |-- utils/config_loader.py       # YAML and environment config loader
+|   |-- utils/logger.py              # Project logger
 |
-|-- tests/                   # Unit and API tests
-|-- artifacts/               # Generated trained models and reports
+|-- tests/
+|   |-- test_api.py                  # FastAPI endpoint tests
+|   |-- test_features.py             # Feature engineering tests
+|
+|-- Visualisations/
+|   |-- Bank_churn_analysis.pbix     # Power BI dashboard file
+|   |-- rfm_feature_engineering.sql  # SQL version of RFM logic
+|   |-- table_creation.sql           # SQL table setup
+|
+|-- EDA.ipynb                        # Main exploratory analysis notebook
+|-- bank_churn_predictions.csv       # Generated scoring output
+|-- .gitignore
 |-- requirements.txt
 |-- README.md
 ```
+
+Local/generated folders such as `venv/`, `mlruns/`, `.pytest_cache/`, `__pycache__/`, model `.pkl` files, logs, and raw/processed datasets are excluded from the source-oriented structure above and should generally stay out of GitHub.
 
 ## Requirements
 
