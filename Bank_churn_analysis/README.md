@@ -34,27 +34,83 @@ In this project, RFM is adapted for bank customer data:
 
 The model predicts churn probability, while the RFM logic helps translate the prediction into a more business-friendly customer segment and action recommendation.
 
-## Dashboard General Findings
+## Power BI Dashboard
 
-The Power BI executive overview below summarises churn performance, customer mix, and RFM-based retention risk.
+The Power BI report contains an executive overview, churn-driver analysis, RFM segmentation, customer-level lookup, predictive model results, and segment-based retention recommendations. The screenshots below show the report pages and the insights visible in the displayed filter state. Values may change when report filters are applied.
+
+### Executive Overview
 
 ![Executive overview dashboard](Visualisations/executive_overview.png)
 
-### Key Insights
+This page summarises churn, customer mix, and RFM segments:
 
-- Overall churn rate is `20.37%`, with `2,037` churned customers out of `10,000` total customers.
-- The average RFM score is `9.00`, suggesting the customer base is concentrated around a mid-tier relationship strength rather than being heavily weighted toward the highest-value segment.
-- `Lost / hibernating` customers have the highest churn rate at `34.04%`, followed by `At risk` customers at `29.03%`.
-- `Loyal customer` has the lowest churn rate at `15.24%`, showing that stronger relationship quality is associated with lower churn.
-- The largest customer groups are `Loyal customer` at `38.25%` and `Potential loyalist` at `37.76%`, so even moderate churn in these groups can create a large absolute number of lost customers.
-- Germany has the highest churn rate at `32.44%`, almost double Spain at `16.67%` and France at `16.15%`.
-- Female customers show a higher churn rate at `25.07%` compared with male customers at `16.46%`.
+- The dataset contains `10,000` customers, of whom `2,037` churned, for an overall churn rate of `20.37%`.
+- Average RFM score is `9.00`; average balance is approximately `76.49K`.
+- Loyal customers (`38.25%`) and Potential loyalists (`37.76%`) are the largest segments.
+- Lost / hibernating customers have the highest segment churn rate (`34.04%`), followed by At risk (`29.03%`). Loyal customers have the lowest (`15.24%`).
+- Germany has the highest geographic churn rate (`32.44%`), compared with Spain (`16.67%`) and France (`16.15%`). Female customers show `25.07%` churn versus `16.46%` for male customers.
 
-### Business Implications
+### Churn Drivers
 
-- Retention campaigns should prioritise `Lost / hibernating` and `At risk` customers because these groups show the highest churn rates.
-- Germany should be investigated as a market-specific churn issue. Pricing, product experience, service quality, or competitor pressure may be materially different from France and Spain.
-- The bank should protect the large `Loyal customer` and `Potential loyalist` base with early engagement, cross-sell discipline, and proactive service because these groups represent most of the portfolio.
+![Churn drivers dashboard](Visualisations/churn_driver.png)
+
+This page compares churn rates across age, geography, balance, product-count, credit-score, tenure, and gender groups:
+
+- The displayed rates peak for ages `55–64` (`49.83%`) and `45–54` (`48.15%`); they are lower for ages `25–34` (`7.76%`) and `Under 25` (`8.75%`).
+- Churn is highest in Germany (`32.44%`) and among customers in the Very High balance group (`55.88%`).
+- Churn is especially high among customers with 3 products (`82.71%`) and 4 products (`100%`), indicating a group to investigate alongside their customer counts.
+- Credit-score group rates range from `19.76%` (`600–749`) to `32.97%` (`300–449`). The tenure chart stays roughly between `17%` and `23%`.
+- Credit-card ownership is associated with similar churn rates: about `20.8%` for customers without a card and `20.2%` for cardholders.
+
+### RFM Investigation
+
+![RFM analysis dashboard](Visualisations/RFM%20investigation.png)
+
+This page compares the five RFM segments by customer count, geography, average balance and salary, number of products, age, and credit score:
+
+- Segment counts are Champions `671`, Loyal customers `3,825`, Potential loyalists `3,776`, At risk `1,681`, and Lost / hibernating `47` (10,000 customers total).
+- Average products per customer decline from `2.13` for Champions to `1.00` for Lost / hibernating.
+- Champions have the highest displayed average balance (`131K`), while Lost / hibernating customers average approximately `0K` balance. Average salary is highest for Champions (`122K`) and lowest for Lost / hibernating (`59K`).
+- Average ages are close across segments (about `38–40`). Average credit scores are also similar, with Lost / hibernating lowest (`633.43`).
+- The country-by-segment churn view highlights elevated rates in Germany for At risk (`51%`), Potential loyalist (`39%`), and Loyal customer (`28%`) groups. France has the highest displayed rate for Lost / hibernating customers (`42%`).
+
+### Customer Analysis
+
+![Customer information dashboard](Visualisations/Customer_analysis.png)
+
+This is a customer lookup and drill-down page. It provides filters for segment, age group, activity, geography, balance, product count, credit score, and customer status, alongside a customer table and a selected customer's profile. The example profile displays both an RFM segment and a customer status; these are separate fields, so a customer can be classed as `Lost / hibernating` by the RFM rules while still showing `Retained` as their churn outcome. The page is designed for individual-record exploration rather than portfolio-wide conclusions.
+
+### Predictive Insights
+
+![Predictive insights dashboard](Visualisations/Predictive_Insights.png)
+
+This page presents model scores, churn-risk tiers, a confusion matrix, and feature-importance scores:
+
+- The displayed population is `7,963` customers, with average predicted churn probability `0.29` and estimated balance at risk of `80.85M`.
+- At the displayed `0.4` decision threshold, churn recall is `0.84`, precision is `0.40`, and F1-score is `0.54`. The model identifies most churners, while the moderate precision means risk flags should be reviewed before costly retention offers are made.
+- The page classifies `4,950` customers as Low risk, `2,132` as Medium risk, and `881` as High risk.
+- Number of products (`0.79`) and age (`0.72`) have the highest displayed feature-importance scores, followed by active-member status (`0.39`). These are useful signals for prioritization and investigation.
+
+### Action Planner
+
+![Action planner dashboard](Visualisations/Action_planner.png)
+
+This page translates the segments into suggested retention actions:
+
+- **Champions:** protect loyalty through premium service, early access, and personal relationship management.
+- **Loyal customers:** deepen engagement and consider a third-product offer, with targeted follow-up for inactive customers.
+- **Potential loyalists:** encourage activation and product adoption through personalized outreach.
+- **At Risk:** prioritize direct re-engagement and retention offers.
+- **Lost / hibernating:** use lower-priority reactivation and support offers; the page describes this group as inactive and zero-balance.
+- **All segments:** investigate Germany's churn pattern and reduce single-product dependence.
+
+## Business Implications
+
+- **Prioritize retention by risk.** Lost / hibernating customers have the highest observed segment churn rate (`34.04%`), followed by At risk customers (`29.03%`). Focus urgent, tailored re-engagement on these groups, while matching the effort to each segment's size and likely value.
+- **Investigate Germany's elevated churn.** Germany's churn rate (`32.44%`) is substantially above Spain (`16.67%`) and France (`16.15%`). Compare customer feedback, service experience, product fit, and competitor conditions across markets before selecting a market-specific intervention.
+- **Protect the largest customer segments.** Loyal customers (`38.25%`) and Potential loyalists (`37.76%`) together represent three quarters of the customer base. Use proactive service, relevant engagement, and carefully targeted cross-sell to retain these customers and deepen relationships without creating avoidable friction.
+- **Use model scores to focus outreach.** The predictive page's high recall can help surface customers at risk, while its `0.40` precision means a prediction should guide review and prioritization rather than trigger an expensive offer automatically.
+- **Investigate customer patterns before scaling offers.** Churn varies across age, balance, and product-count groups. Validate the size and value of each group, then test targeted actions and compare retention outcomes before broad rollout.
 
 ## Project Structure
 
@@ -110,7 +166,12 @@ Bank_churn_analysis/
 |
 |-- Visualisations/
 |   |-- Bank_churn_analysis.pbix     # Power BI dashboard file
-|   |-- executive_overview.png       # Cropped dashboard image for README insights
+|   |-- executive_overview.png       # Executive overview dashboard screenshot
+|   |-- churn_driver.png             # Churn drivers dashboard screenshot
+|   |-- RFM investigation.png        # RFM analysis dashboard screenshot
+|   |-- Customer_analysis.png        # Customer information dashboard screenshot
+|   |-- Predictive_Insights.png      # Predictive insights dashboard screenshot
+|   |-- Action_planner.png           # Retention action planner screenshot
 |   |-- rfm_feature_engineering.sql  # SQL version of RFM logic
 |   |-- table_creation.sql           # SQL table setup
 |
