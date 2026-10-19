@@ -44,7 +44,7 @@ The landing page is the report’s entry point and directs readers to the six an
 
 ### Hospital Overview
 
-![Hospital Overview](Hospital Overview.png)
+![Hospital Overview](<Hospital Overview.png>)
 - The displayed 2025 current-period totals are **713 encounters and 533 distinct patients**. The 2024 full-year reference values are **787 encounters and 587 patients**. The current 2025 values are 74 encounters (**9.4%**) and 54 patients (**9.2%**) below those 2024 annual totals.
 - Emergency encounters are **178 in 2025 versus 164 in 2024** (**+14, or 8.5%**). However, inpatient encounters are 236 versus 258 (**-22 or 8.53%** lower), and outpatient encounters are 233 versus 279 (**-46 or 16.49%** lower). The mix suggests emergency demand is holding up more strongly than inpatient and outpatient activity.
 - Neurology had the most encounters in 2025 (**150; 21.0%**), while Pediatrics had the fewest (**127; 17.8%**). However, compared to last year, the number of encounter is only higher in Cardiology with 2 extra encounters (**+1.4%**)
@@ -52,13 +52,13 @@ The landing page is the report’s entry point and directs readers to the six an
 
 ### Patient Insights
 
-![Patient Insights](Patient Insight.png)
+![Patient Insights](<Patient Insight.png>)
 - Mean feedback was **2.93/5** in the 2025 extract versus **3.03/5** in 2024 if all Patient IDs are selected.
 - Example: Patient **P0005** (Sarah Clark in the source data) is an example of how to read the selected-patient profile. In 2025, the record shows **one emergency encounter** assigned to Orthopedics, admitted on 26 May and discharged on 2 June. The encounter has **$2,376.40 in treatment charges**, **$4,214.74 in medication charges**, **no surgery charge**, and **$6,591.14 total billed charges**. The recorded feedback score is **2.06/5**.
 
 ### Staff Performance
 
-![Staff Performance](Staff Performance.png)
+![Staff Performance](<Staff Performance.png>)
 - Overall, the present rate of staff is 90.44%, where all staff showed up to work in **7122 shifts** out of **7875 expected shifts**. The average work duration is roughly 9.4 hours per shift. 
 - The bar chart shows that number of daytime shift is equal to that of nighttime shift.
 - There is also a table showing the attendance history for analysing individual staff.
@@ -66,7 +66,7 @@ The landing page is the report’s entry point and directs readers to the six an
 
 ### Encounter Financial Analysis
 
-![Encounter Financial Analysis](Encounter Financial Analysis.png)
+![Encounter Financial Analysis](<Encounter Financial Analysis.png>)
 - The analysis is conducted based on solely the charges made from each encounter, not accounting for the inventory cost, labour cost or rental matters. 
 - Billed encounter charges total **$3.60 million** in 2025, compared with **$3.87 million** for full-year 2024 (**roughly $270,000, or 7.5%, lower**). The revenue sums treatment, surgery, and medication charges in `Fact_Patient_Encounters`.
 - The total operation cost is **$2.52 million** in 2025 compared with **$2.71 million** in 2024. The cost is roughly **$190,000** lower in the later year.
@@ -74,7 +74,7 @@ The landing page is the report’s entry point and directs readers to the six an
 
 ### Inventory Analysis
 
-![Inventory Analysis](Inventory Analysis.png)
+![Inventory Analysis](<Inventory Analysis.png>)
 - The 2025 extract contains **24 snapshots**, from 10 January to 21 December. At the first snapshot, available stock was **11,182 units** valued at **$572,159**. At the latest snapshot, it was **10,704 units** valued at **$556,356**, which is a reduction of **478 units (4.3%)** and **$15,803 (2.8%)** across those snapshots.
 - Compared with the latest 2024 snapshot (26 December: **11,422 units; $590,352**), the latest 2025 snapshot (21 December) is **718 units (6.3%)** and **$33,996 (5.8%)** lower in aggregate.
 - All 43 medicines had more than 100 units at the latest snapshot. The medicine with the lowest quantity of stock is Antibiotics Type 2, in which there are **108 units**. However, this does not mean the lower-stock items need replenishment, because their demand is not extreme and there is no expiry information that I can use to assess shortage and waste risk.
