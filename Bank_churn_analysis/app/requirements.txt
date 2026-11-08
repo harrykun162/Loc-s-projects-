@@ -1,0 +1,12 @@
+# Streamlit Community Cloud looks beside app/streamlit_app.py for dependencies.
+# Keep the model runtime versions aligned with the local Python 3.11 environment.
+streamlit==1.56.0
+pandas==2.3.3
+numpy==2.4.4
+scikit-learn==1.8.0
+imbalanced-learn==0.14.1
+xgboost==3.2.0
+pydantic>=2,<3
+python-dotenv
+joblib
+PyYAML
