@@ -6,7 +6,6 @@ and assign segment labels. Mirrors the SQL logic exactly.
 """
 from __future__ import annotations
 from functools import lru_cache
-import mlflow
 import numpy as np
 import pandas as pd
 from pathlib import Path
@@ -117,6 +116,10 @@ def _segments(df: pd.DataFrame) -> pd.DataFrame:
 def _log_stats(df: pd.DataFrame) -> None:
     if S.data.target_col not in df.columns:
         return
+    # MLflow is needed during training, but prediction inputs do not include
+    # the target column. Import lazily so the inference app doesn't require it.
+    import mlflow
+
     stats = (
         df.groupby("RFM_Segment")[S.data.target_col]
         .agg(["count", "mean"])
