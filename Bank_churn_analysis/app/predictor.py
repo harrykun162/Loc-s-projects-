@@ -25,6 +25,13 @@ from src.utils.logger import get_logger
 
 log = get_logger(__name__)
 S = settings
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _project_path(configured_path: str | Path) -> Path:
+    """Resolve configured relative paths from this project, not process cwd."""
+    path = Path(configured_path)
+    return path if path.is_absolute() else PROJECT_ROOT / path
 
 # ── Risk tier labels ──────────────────────────────────────────────────────
 RISK_TIERS = [
@@ -57,8 +64,8 @@ class ChurnPredictor:
     # ------------------------------------------------------------------
 
     def load(self) -> None:
-        model_path   = Path(S.paths.best_model)
-        feature_path = Path(S.paths.feature_names)
+        model_path   = _project_path(S.paths.best_model)
+        feature_path = _project_path(S.paths.feature_names)
 
         if not model_path.exists():
             raise FileNotFoundError(
